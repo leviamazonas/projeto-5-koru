@@ -38,7 +38,8 @@ Este projeto foi desenvolvido como uma aplicação prática no **Programa Desenv
     ```
 2.  **Instale dependências:**
     ```bash
-    npm install dotenv
+    npm install dotenv 
+    npm install express
     ```
 3.  **Configure o `.env`:**
     Crie um arquivo `.env` na raiz do projeto com sua chave da OpenWeatherMap:
@@ -46,6 +47,9 @@ Este projeto foi desenvolvido como uma aplicação prática no **Programa Desenv
     OPENWEATHER_API_KEY=SUA_CHAVE_AQUI
     ```
     (Obtenha sua chave em [openweathermap.org/api](https://openweathermap.openweathermap.org/api)).
+
+    > ⚠️ Por se tratar de um projeto acadêmico, o arquivo `.env` contendo a chave **não foi ignorado** no repositório.
+    
 4.  **Execute o projeto:**
     ```bash
      node src/services/cli.js + cep
