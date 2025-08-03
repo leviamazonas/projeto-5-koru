@@ -126,4 +126,13 @@ async function main(cep) {
   }
 }
 
-main(58701406);
+const readline = require("readline").createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+readline.question("Digite o CEP da cidade: ", (cep) => {
+  main(cep);
+  readline.close();
+});
+
