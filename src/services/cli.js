@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 async function buscarCep(cep) {
   const url = `https://brasilapi.com.br/api/cep/v2/${cep}`;
 
@@ -96,7 +98,8 @@ async function main(cep) {
     Estado: ${response.estado}
     Cidade_Id: ${response.codigoCidade}
   `);
-    const apiKey = "45cb046c019960723f8ed962f02543ee";
+
+    const apiKey = process.env.OPENWEATHER_API_KEY;
 
     const climaDados = await buscarClimaOpenWeather(
       response.cidade,
