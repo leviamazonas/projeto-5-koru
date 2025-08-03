@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debug & Beauty - Clima por CEP</title>
+  
+  <!-- CSS -->
+  <style>
+    
+    :root {
+      --cor-primaria: #6c63ff;
+      --cor-secundaria: #f2f2f2;
+      --cor-texto: #333;
+      --cor-branca: #fff;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--cor-secundaria);
+      color: var(--cor-texto);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--cor-primaria);
+      padding: 15px;
+      color: var(--cor-branca);
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      height: 50px;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .busca-container {
+      background: var(--cor-branca);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo-caixa {
+      max-width: 60%;
+      height: auto;
+      display: block;
+      margin: 0 auto 15px auto;
+    }
+    .busca-container h2 {
+      margin-bottom: 15px;
+      margin-top: -41px;
+    }
+    .busca-form {
+      display: flex;
+      gap: 10px;
+    }
+    .busca-form input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .busca-form button {
+      background: var(--cor-primaria);
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      color: var(--cor-branca);
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .busca-form button:hover {
+      background: #574bff;
+    }
+    .info {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #777;
+    }
+    .resultado {
+      margin-top: 30px;
+      padding: 20px;
+      background: var(--cor-branca);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    footer {
+      background: var(--cor-primaria);
+      color: var(--cor-branca);
+      text-align: center;
+      padding: 10px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .card {
+      background: #f2f2f2;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header></header>
+
+
+  <main>
+    <div class="busca-container">
+      <br>
+      <h2>🌤️ Consulte o clima pelo CEP</h2>
+      <div class="busca-form">
+        <input type="text" id="cep" placeholder="Digite o CEP" maxlength="8" />
+        <button id="buscar">Buscar</button>
+      </div>
+      <p class="info">Digite somente os números</p>
+    </div>
+
+    <div id="resultado" class="resultado">
+      <p>Resultado da busca:</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Debug & Beauty - Projeto Koru</p>
+  </footer>
+
+  <!-- JS -->
+  <script>
+    async function buscarClima() {
+      const cep = document.getElementById("cep").value;
+      const resultado = document.getElementById("resultado");
+
+      if (!cep) {
+        alert("Digite um CEP válido!");
+        return;
+      }
+
+      resultado.innerHTML = "<p>⏳ Buscando...</p>";
+
+      try {
+        const response = await fetch(`/clima/${cep}`);
+        if (!response.ok) throw new Error("Erro ao buscar dados");
+
+        const data = await response.json();
+
+        let html = "<h2>" + data.cidade + " - " + data.estado + "</h2>";
+        html += `
+          <div class="clima-atual">
+            <p><strong>🌡️ Temperatura:</strong> ${data.climaAtual.temperatura.toFixed(1)}°C</p>
+            <p><strong>💧 Umidade:</strong> ${data.climaAtual.umidade}%</p>
+            <p><strong>🌬️ Vento:</strong> ${data.climaAtual.vento} m/s</p>
+            <p><strong>☁️ Condição:</strong> ${data.climaAtual.descricao}</p>
+          </div>
+          <h3>📅 Previsão para os próximos dias:</h3>
+          <div class="cards">
+        `;
+
+        for (const [dataPrev, info] of Object.entries(data.previsao)) {
+          html += `
+            <div class="card">
+              <p><strong>${dataPrev}</strong></p>
+              <p>🌡️ Min: ${info.tempMin.toFixed(1)}°C</p>
+              <p>🌡️ Max: ${info.tempMax.toFixed(1)}°C</p>
+              <p>${info.condicao}</p>
+            </div>
+          `;
+        }
+
+        html += "</div>";
+        resultado.innerHTML = html;
+      } catch (error) {
+        resultado.innerHTML = `<p style="color:red;">❌ ${error.message}</p>`;
+      }
+    }
+
+    document.getElementById("buscar").addEventListener("click", buscarClima);
+  </script>
+</body>
+</html>

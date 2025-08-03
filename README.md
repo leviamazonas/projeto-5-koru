@@ -18,7 +18,9 @@ Este projeto foi desenvolvido como uma aplicação prática no **Programa Desenv
 - **Node.js**
 - **BrasilAPI**
 - **OpenWeatherMap API**
+- **Express** (para servir a versão Web)
 - **`dotenv`** (para chaves de API)
+
 ---
 
 ## Como Rodar
@@ -46,9 +48,8 @@ Este projeto foi desenvolvido como uma aplicação prática no **Programa Desenv
     (Obtenha sua chave em [openweathermap.org/api](https://openweathermap.openweathermap.org/api)).
 4.  **Execute o projeto:**
     ```bash
-     node src/services/cli.js
+     node src/services/cli.js + cep
     ```
-    O programa solicitará que você digite um CEP no terminal.
-
-
-
+5.  **Rodar a Interface Web (localhost):**
+    Inicie o servidor Express: npm start
+    Acesse no navegador:http://localhost:SUA_PORTA

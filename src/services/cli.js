@@ -1,57 +1,34 @@
-require("dotenv").config();
+import "dotenv/config";
+console.log("🔑 API Key carregada:", process.env.OPENWEATHER_API_KEY);
 
-async function buscarCep(cep) {
+// ---------- Funções exportadas (usadas pelo index.js) ----------
+export async function buscarCep(cep) {
   const url = `https://brasilapi.com.br/api/cep/v2/${cep}`;
-
   const resposta = await fetch(url);
-  if (!resposta.ok) {
+  if (!resposta.ok)
     throw new Error(`Erro ao buscar CEP: ${resposta.statusText}`);
-  }
 
   const data = await resposta.json();
-  if (!data.city || !data.state) {
-    throw new Error("Dados de cidade ou estado não encontrados na resposta");
-  }
+  if (!data.city || !data.state)
+    throw new Error("Cidade ou estado não encontrados");
 
   const { city: cidade, state: estado } = data;
 
-  const cidadeUrl = `https://brasilapi.com.br/api/cptec/v1/cidade/${cidade}`;
-  const respostaCidade = await fetch(cidadeUrl);
-  if (!respostaCidade.ok) {
-    throw new Error(`Erro ao buscar cidade: ${respostaCidade.statusText}`);
-  }
-
-  const dataCidade = await respostaCidade.json();
-  if (!Array.isArray(dataCidade)) {
-    throw new Error("Dados de cidade inválidos");
-  }
-
-  const cidadeEncontrada = dataCidade.find((item) => item.estado === estado);
-
-  if (!cidadeEncontrada) {
-    throw new Error(`Cidade ${cidade} não encontrada no estado ${estado}`);
-  }
-
-  return {
-    cidade,
-    estado,
-    codigoCidade: cidadeEncontrada.id,
-  };
+  return { cidade, estado };
 }
-async function buscarClimaOpenWeather(cidade, estado, apiKey) {
+
+export async function buscarClimaOpenWeather(cidade, estado, apiKey) {
   const urlAtual = `https://api.openweathermap.org/data/2.5/weather?q=${cidade},${estado},BR&appid=${apiKey}&units=metric&lang=pt`;
   const urlPrevisao = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade},${estado},BR&appid=${apiKey}&units=metric&lang=pt`;
 
   const respostaAtual = await fetch(urlAtual);
-  if (!respostaAtual.ok) {
-    throw new Error(`Erro ao buscar clima atual: ${respostaAtual.statusText}`);
-  }
+  if (!respostaAtual.ok)
+    throw new Error(`Erro ao buscar clima: ${respostaAtual.statusText}`);
   const dadosAtual = await respostaAtual.json();
 
   const respostaPrevisao = await fetch(urlPrevisao);
-  if (!respostaPrevisao.ok) {
+  if (!respostaPrevisao.ok)
     throw new Error(`Erro ao buscar previsão: ${respostaPrevisao.statusText}`);
-  }
   const dadosPrevisao = await respostaPrevisao.json();
 
   return {
@@ -65,12 +42,10 @@ async function buscarClimaOpenWeather(cidade, estado, apiKey) {
   };
 }
 
-function extrairPrevisaoDiaria(previsao) {
+export function extrairPrevisaoDiaria(previsao) {
   const previsoesDiarias = {};
-
   previsao.list.forEach((item) => {
     const data = item.dt_txt.split(" ")[0];
-
     if (!previsoesDiarias[data]) {
       previsoesDiarias[data] = {
         tempMin: item.main.temp_min,
@@ -86,56 +61,36 @@ function extrairPrevisaoDiaria(previsao) {
       }
     }
   });
-
   return previsoesDiarias;
 }
-async function main(cep) {
-  try {
-    const response = await buscarCep(cep);
 
-    console.log(`
-    Cidade: ${response.cidade}
-    Estado: ${response.estado}
-    Cidade_Id: ${response.codigoCidade}
-  `);
-
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-
-    const climaDados = await buscarClimaOpenWeather(
-      response.cidade,
-      response.estado,
-      apiKey
-    );
-
-    console.log(`\nClima atual:`);
-    console.log(`Temperatura: ${climaDados.climaAtual.temperatura}°C`);
-    console.log(`Umidade: ${climaDados.climaAtual.umidade}%`);
-    console.log(`Velocidade do vento: ${climaDados.climaAtual.vento} m/s`);
-    console.log(`Descrição: ${climaDados.climaAtual.descricao}`);
-
-    const previsaoDiaria = extrairPrevisaoDiaria(climaDados.previsao);
-
-    console.log(`\nPrevisão para os próximos dias:`);
-
-    for (const [data, info] of Object.entries(previsaoDiaria)) {
-      console.log(
-        `- ${data}: Min ${info.tempMin.toFixed(
-          1
-        )}°C, Max ${info.tempMax.toFixed(1)}°C, Condição: ${info.condicao}`
+// ---------- Execução direta via terminal ----------
+if (process.argv.length > 2) {
+  const cep = process.argv[2];
+  buscarCep(cep)
+    .then(async (dados) => {
+      console.log(`\nCidade: ${dados.cidade} - ${dados.estado}`);
+      const clima = await buscarClimaOpenWeather(
+        dados.cidade,
+        dados.estado,
+        process.env.OPENWEATHER_API_KEY
       );
-    }
-  } catch (error) {
-    console.error(`Erro: ${error.message}`);
-  }
+
+      console.log(`\nClima atual:`);
+      console.log(`🌡️ Temperatura: ${clima.climaAtual.temperatura}°C`);
+      console.log(`💧 Umidade: ${clima.climaAtual.umidade}%`);
+      console.log(`🌬️ Vento: ${clima.climaAtual.vento} m/s`);
+      console.log(`☁️ Condição: ${clima.climaAtual.descricao}`);
+
+      const previsaoDiaria = extrairPrevisaoDiaria(clima.previsao);
+      console.log(`\n📅 Previsão:`);
+      for (const [dataPrev, info] of Object.entries(previsaoDiaria)) {
+        console.log(
+          `${dataPrev} → Min: ${info.tempMin.toFixed(
+            1
+          )}°C | Max: ${info.tempMax.toFixed(1)}°C | ${info.condicao}`
+        );
+      }
+    })
+    .catch((err) => console.error("❌ Erro:", err.message));
 }
-
-const readline = require("readline").createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-readline.question("Digite o CEP da cidade: ", (cep) => {
-  main(cep);
-  readline.close();
-});
-
